@@ -100,7 +100,7 @@ func startApplication(config *Config) {
 
 	for _, user := range users {
 		fmt.Println("Loading games for " + user.Name)
-		gridDir := filepath.Join(user.Dir, "config", "grid-debug")
+		gridDir := filepath.Join(user.Dir, "config", "grid")
 
 		err = os.MkdirAll(filepath.Join(gridDir, "originals"), 0777)
 		if err != nil {
