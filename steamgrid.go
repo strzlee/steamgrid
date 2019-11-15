@@ -5,14 +5,11 @@ package main
 import (
 	"bufio"
 	"errors"
-	"flag"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
-	"time"
 )
 
 // Prints an error and quits.
@@ -22,12 +19,7 @@ func errorAndExit(err error) {
 	os.Exit(0)
 }
 
-func main() {
-	http.DefaultTransport.(*http.Transport).ResponseHeaderTimeout = time.Second * 10
-	startApplication()
-}
-
-func startApplication() {
+func startApplication(config *Config) {
 	artStyles := map[string][]string{
 		// BannerLQ: 460 x 215
 		// BannerHQ: 920 x 430
@@ -44,19 +36,7 @@ func startApplication() {
 		"Logo": []string{"_logo", ".logo", "logo.png", "1280", "720", "640", "360"},
 	}
 
-	steamGridDBApiKey := flag.String("steamgriddb", "", "Your personal SteamGridDB api key, get one here: https://www.steamgriddb.com/profile/preferences")
-	IGDBApiKey := flag.String("igdb", "", "Your personal IGDB api key, get one here: https://api.igdb.com/signup")
-	steamDir := flag.String("steamdir", "", "Path to your steam installation")
-	// "alternate" "blurred" "white_logo" "material" "no_logo"
-	steamGridStyles := flag.String("styles", "alternate", "Comma seperated list of styles to download from SteamGridDB.\nExample: \"white_logo,material\"")
-	// "static" "animated"
-	steamGridTypes := flag.String("types", "static", "Comma seperated list of types to download from SteamGridDB.\nExample: \"static,animated\"")
-	skipSteam := flag.Bool("skipsteam", false, "Skip downloads from Steam servers")
-	skipGoogle := flag.Bool("skipgoogle", false, "Skip search and downloads from google")
-	nonSteamOnly := flag.Bool("nonsteamonly", false, "Only search artwork for Non-Steam-Games")
-	flag.Parse()
-
-	steamGridFilter := "?styles=" + *steamGridStyles + "&types=" + *steamGridTypes
+	steamGridFilter := "?styles=" + config.SteamGridDBArtstyle + "&types=" + config.SteamGridDBType
 
 	fmt.Println("Loading overlays...")
 	overlays, err := LoadOverlays(filepath.Join(filepath.Dir(os.Args[0]), "overlays by category"), artStyles)
@@ -70,7 +50,7 @@ func startApplication() {
 	}
 
 	fmt.Println("Looking for Steam directory...\nIf SteamGrid doesn´t find the directory automatically, launch it with an argument linking to the Steam directory.")
-	installationDir, err := GetSteamInstallation(*steamDir)
+	installationDir, err := GetSteamInstallation(config.SteamPath)
 	if err != nil {
 		errorAndExit(err)
 	}
@@ -120,14 +100,14 @@ func startApplication() {
 
 	for _, user := range users {
 		fmt.Println("Loading games for " + user.Name)
-		gridDir := filepath.Join(user.Dir, "config", "grid")
+		gridDir := filepath.Join(user.Dir, "config", "grid-debug")
 
 		err = os.MkdirAll(filepath.Join(gridDir, "originals"), 0777)
 		if err != nil {
 			errorAndExit(err)
 		}
 
-		games := GetGames(user, *nonSteamOnly)
+		games := GetGames(user, config.OnlyNonSteamGames)
 
 		fmt.Println("Loading existing images and backups...")
 
@@ -166,10 +146,10 @@ func startApplication() {
 				// Download if missing.
 				///////////////////////
 				if game.ImageSource == "" {
-					from, err := DownloadImage(gridDir, game, artStyle, artStyleExtensions, *skipSteam, *steamGridDBApiKey, steamGridFilter, *IGDBApiKey, *skipGoogle)
+					from, err := DownloadImage(gridDir, game, artStyle, artStyleExtensions, config.SkipSteam, config.SteamGridDBAPIKey, steamGridFilter, config.IGDBAPIKey, config.SkipGoogle)
 					if err != nil && err.Error() == "SteamGridDB authorization token is missing or invalid" {
 						// Wrong api key
-						*steamGridDBApiKey = ""
+						config.SteamGridDBAPIKey = ""
 						fmt.Println(err.Error())
 					} else if err != nil {
 						fmt.Println(err.Error())

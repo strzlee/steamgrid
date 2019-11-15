@@ -1,0 +1,10 @@
+{
+  "SteamPath": "",
+  "SteamGridDBAPIKey": "",
+  "SteamGridDBArtstyle": "alternate, blurred",
+  "SteamGridDBType": "static",
+  "IGDBAPIKey": "",
+  "OnlyNonSteamGames": false,
+  "SkipSteam": false,
+  "SkipGoogle": false
+}
