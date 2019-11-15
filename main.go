@@ -3,9 +3,9 @@ package main
 import (
 	"encoding/json"
 	"io/ioutil"
+	"net/http"
 	"net/url"
 	"os"
-	"net/http"
 	"time"
 
 	"fyne.io/fyne/app"
@@ -27,12 +27,12 @@ type Config struct {
 const configFileName = "steamgrid-config.json"
 
 func writeConfigFile(c *Config) error {
-	file, err := os.Create(configFileName)      
+	file, err := os.Create(configFileName)
 	if err == nil {
 		defer file.Close()
 		data, err := json.MarshalIndent(c, "", "  ")
 		if err == nil {
-				_, err = file.Write(data)
+			_, err = file.Write(data)
 		}
 	}
 	return err
@@ -40,10 +40,10 @@ func writeConfigFile(c *Config) error {
 
 func readConfigFile() *Config {
 	var c *Config = new(Config)
-    file, err := ioutil.ReadFile(configFileName)
-    if err == nil {
-        json.Unmarshal(file, c)
-    }
+	file, err := ioutil.ReadFile(configFileName)
+	if err == nil {
+		json.Unmarshal(file, c)
+	}
 	return c
 }
 
@@ -72,8 +72,8 @@ func main() {
 	skipGoogleCheck := widget.NewCheck("Skip search and downloads from Google", nil)
 	skipGoogleCheck.SetChecked(conf.SkipGoogle)
 	IGDBUrl, _ := url.Parse("https://api.igdb.com/signup")
-  steamGridDbURL, _ := url.Parse("https://www.steamgriddb.com/profile/preferences")
-  statusLabel := widget.NewLabel("")
+	steamGridDbURL, _ := url.Parse("https://www.steamgriddb.com/profile/preferences")
+	statusLabel := widget.NewLabel("")
 
 	w := a.NewWindow("Steamgrid")
 
@@ -108,18 +108,18 @@ func main() {
 			conf.OnlyNonSteamGames = onlyNonSteamCheck.Checked
 			conf.SkipSteam = skipSteamCheck.Checked
 			conf.SkipGoogle = skipGoogleCheck.Checked
-            err := writeConfigFile(conf)
-            if err != nil {
-                statusLabel.SetText("Config saved. Steamgrid running...")
-            }
+			err := writeConfigFile(conf)
+			if err != nil {
+				statusLabel.SetText("Config saved. Steamgrid running...")
+			}
 			startApplication(conf)
 		}),
 		widget.NewButton("Exit", func() {
 			a.Quit()
-    }),
-    widget.NewVBox(
-    	statusLabel,
-    ),
+		}),
+		widget.NewVBox(
+			statusLabel,
+		),
 	))
 
 	w.ShowAndRun()
