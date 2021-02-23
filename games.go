@@ -117,8 +117,9 @@ func addNonSteamGames(user User, games map[string]*Game) {
 		gameName := gameGroups[1]
 		target := gameGroups[2]
 		uniqueName := bytes.Join([][]byte{target, gameName}, []byte(""))
-		// Does IEEE CRC32 of target concatenated with gameName. No idea why Steam chose this operation.
-		gameID := strconv.FormatUint(uint64(crc32.ChecksumIEEE(uniqueName))|0x80000000, 10)
+		// https://gist.github.com/stormyninja/6295d5e6c1c9c19ab0ce46d546e6d0b1
+		top := uint64(crc32.ChecksumIEEE(uniqueName)) | 0x80000000
+		gameID := strconv.FormatUint((top << 32 | 0x02000000) >> 32, 10)
 		game := Game{gameID, string(gameName), []string{}, "", nil, nil, "", true}
 		games[gameID] = &game
 
